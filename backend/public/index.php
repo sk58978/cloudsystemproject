@@ -28,5 +28,5 @@ spl_autoload_register(function ($class) {
     }
 });
 
-// Placeholder for Router (will be added in next task)
-// echo json_encode(["message" => "Marketplace API Entry Point"]);
+// Router
+require_once __DIR__ . '/../routes/api.php';
