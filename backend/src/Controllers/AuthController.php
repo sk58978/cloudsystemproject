@@ -49,14 +49,63 @@ class AuthController
         }
     }
 
-    // Placeholder for login (next task)
     public function login()
     {
+        $data = json_decode(file_get_contents('php://input'), true);
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? '';
+
+        $user = $this->userRepository->findByEmail($email);
+
+        if ($user && password_verify($password, $user['password_hash'])) {
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['user_name'] = $user['name'];
+
+            echo json_encode([
+                'message' => 'Logged in successfully',
+                'user' => [
+                    'id' => $user['id'],
+                    'name' => $user['name'],
+                    'email' => $user['email'],
+                    'role' => $user['role']
+                ]
+            ]);
+        } else {
+            http_response_code(401);
+            echo json_encode(['error' => 'Invalid credentials']);
+        }
     }
+
     public function logout()
     {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        session_destroy();
+        echo json_encode(['message' => 'Logged out']);
     }
+
     public function check()
     {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (isset($_SESSION['user_id'])) {
+            echo json_encode([
+                'authenticated' => true,
+                'user' => [
+                    'id' => $_SESSION['user_id'],
+                    'role' => $_SESSION['role'],
+                    'name' => $_SESSION['user_name'] ?? ''
+                ]
+            ]);
+        } else {
+            echo json_encode(['authenticated' => false]);
+        }
     }
 }
