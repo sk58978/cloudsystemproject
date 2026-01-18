@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>PolMarket – Strona główna</title>
+    <link rel="stylesheet" href="../assets/css/reset.css" />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+
+<body>
+    <header class="header">
+        <div class="logo">Po<span>l</span>MARKET</div>
+        <nav class="nav">
+            <a href="index.html">Sklep</a>
+            <a href="category.html">Kategorie</a>
+            <a href="contact.html">Kontakt</a>
+        </nav>
+        <div class="header-right">
+            <input type="text" id="searchInput" placeholder="Szukaj produktów..." />
+            <a href="cart.html" class="cart-link">Koszyk (<span id="cart-count">0</span>)</a>
+            <a href="login.html" id="auth-link">Profil</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Jesteśmy nowym, rozwijającym się Marketplacem z Polski</h1>
+            <p>Zobacz nasze najnowsze produkty i promocje.</p>
+            <a href="#products" class="btn-primary">ZOBACZ NASZE PRODUKTY</a>
+        </section>
+
+        <section class="categories" id="categories"></section>
+
+        <section class="products" id="products">
+            <h2>Polecane produkty</h2>
+            <div id="products-grid" class="products-grid"></div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>© 2025 PolMarket – projekt na uczelnię.</p>
+    </footer>
+
+    <script type="module" src="../js/pages/home.js"></script>
+</body>
+
+</html>
