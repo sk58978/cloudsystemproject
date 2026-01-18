@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Rejestracja – PolMarket</title>
+    <link rel="stylesheet" href="../assets/css/reset.css" />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+
+<body>
+    <header class="header">
+        <div class="logo"><a href="index.html">Po<span>l</span>MARKET</a></div>
+    </header>
+
+    <main class="auth-container">
+        <h1>Rejestracja</h1>
+        <form id="register-form">
+            <label>Imię i nazwisko
+                <input type="text" name="name" required />
+            </label>
+            <label>Email
+                <input type="email" name="email" required />
+            </label>
+            <label>Hasło
+                <input type="password" name="password" required />
+            </label>
+            <button type="submit" class="btn-primary">Załóż konto</button>
+        </form>
+        <p>Masz już konto? <a href="login.html">Zaloguj się</a></p>
+        <div id="auth-message"></div>
+    </main>
+
+    <footer class="footer">
+        <p>© 2025 PolMarket</p>
+    </footer>
+
+    <script type="module" src="../js/pages/authPages.js"></script>
+</body>
+
+</html>
