@@ -62,16 +62,15 @@ class AuthController
                 session_start();
             }
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['role'] = $user['role'];
+            $_SESSION['user_email'] = $user['email'];
             $_SESSION['user_name'] = $user['name'];
 
             echo json_encode([
-                'message' => 'Logged in successfully',
+                'ok' => true,
                 'user' => [
                     'id' => $user['id'],
-                    'name' => $user['name'],
                     'email' => $user['email'],
-                    'role' => $user['role']
+                    'name' => $user['name']
                 ]
             ]);
         } else {
