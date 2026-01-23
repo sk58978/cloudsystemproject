@@ -1,28 +1,24 @@
 <?php
 namespace App\Controllers;
 
-use App\Config\Database;
-use PDO;
+use App\Repositories\CartRepository;
+use App\Repositories\ProductRepository;
 
 class CartController
 {
-    private PDO $db;
+    private CartRepository $cartRepository;
 
     public function __construct()
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        $this->db = Database::getConnection();
-        // Assume headers are set in index.php, but good to be safe if accessed directly differently (though index handles it)
-        // header('Content-Type: application/json; charset=utf-8');
+        // Session should be started in index.php
+        $this->cartRepository = new CartRepository();
     }
 
     private function requireAuth(): int
     {
         if (!isset($_SESSION['user_id'])) {
             http_response_code(401);
-            echo json_encode(['error' => 'Not authenticated']);
+            echo json_encode(['error' => 'Unauthorized']);
             exit;
         }
         return (int) $_SESSION['user_id'];
@@ -31,55 +27,89 @@ class CartController
     public function get()
     {
         $userId = $this->requireAuth();
-        $sql = 'SELECT ci.id, ci.quantity, ci.product_id, p.name, p.price, p.image_url
-                FROM cart_items ci
-                JOIN products p ON ci.product_id = p.id
-                WHERE ci.user_id = ?';
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$userId]);
-        $items = $stmt->fetchAll();
+        $items = $this->cartRepository->getItems($userId);
 
-        echo json_encode($items);
+        $total = 0.0;
+        foreach ($items as $it) {
+            $total += ((float) $it['price']) * ((int) $it['quantity']);
+        }
+
+        echo json_encode([
+            'items' => $items,
+            'total' => round($total, 2),
+        ]);
     }
 
     public function add()
     {
         $userId = $this->requireAuth();
-        $data = json_decode(file_get_contents('php://input'), true);
-        $productId = (int) ($data['product_id'] ?? 0);
-        $quantity = max(1, (int) ($data['quantity'] ?? 1));
+        $in = json_decode(file_get_contents('php://input'), true);
 
-        if (!$productId) {
+        if (!is_array($in)) {
             http_response_code(400);
-            echo json_encode(['error' => 'Missing product_id']);
+            echo json_encode(['error' => 'Bad JSON']);
             return;
         }
 
-        // Sprawdź, czy już jest w koszyku
-        $stmt = $this->db->prepare('SELECT id, quantity FROM cart_items WHERE user_id = ? AND product_id = ?');
-        $stmt->execute([$userId, $productId]);
-        $row = $stmt->fetch();
+        $productId = (int) ($in['product_id'] ?? 0);
+        $qty = max(1, (int) ($in['qty'] ?? 1));
 
-        if ($row) {
-            $stmt = $this->db->prepare('UPDATE cart_items SET quantity = quantity + ? WHERE id = ?');
-            $stmt->execute([$quantity, $row['id']]);
-        } else {
-            $stmt = $this->db->prepare('INSERT INTO cart_items (user_id, product_id, quantity) VALUES (?, ?, ?)');
-            $stmt->execute([$userId, $productId, $quantity]);
+        if ($productId <= 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid product']);
+            return;
         }
 
-        echo json_encode(['message' => 'Added to cart']);
+        // Check if product exists (using ProductRepository just for check or assume valid key)
+        $productRepo = new ProductRepository();
+        if (!$productRepo->getById($productId)) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Product not found']);
+            return;
+        }
+
+        $row = $this->cartRepository->findItem($userId, $productId);
+
+        if ($row) {
+            $this->cartRepository->updateQuantity($row['id'], $row['quantity'] + $qty);
+        } else {
+            $this->cartRepository->add($userId, $productId, $qty);
+        }
+
+        echo json_encode(['ok' => true]);
     }
 
     public function remove()
     {
         $userId = $this->requireAuth();
-        $data = json_decode(file_get_contents('php://input'), true);
-        $itemId = (int) ($data['item_id'] ?? 0);
+        $in = json_decode(file_get_contents('php://input'), true);
 
-        $stmt = $this->db->prepare('DELETE FROM cart_items WHERE id = ? AND user_id = ?');
-        $stmt->execute([$itemId, $userId]);
+        $productId = (int) ($in['product_id'] ?? 0);
+        if ($productId <= 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid product_id']);
+            return;
+        }
 
-        echo json_encode(['message' => 'Removed']);
+        $this->cartRepository->remove($userId, $productId);
+        echo json_encode(['ok' => true]);
+    }
+
+    public function update()
+    {
+        $userId = $this->requireAuth();
+        $in = json_decode(file_get_contents('php://input'), true);
+
+        $productId = (int) ($in['product_id'] ?? 0);
+        $qty = min(50, max(1, (int) ($in['qty'] ?? 1)));
+
+        if ($productId <= 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid product_id']);
+            return;
+        }
+
+        $this->cartRepository->updateItemQuantity($userId, $productId, $qty);
+        echo json_encode(['ok' => true, 'qty' => $qty]);
     }
 }
