@@ -85,7 +85,7 @@ class AuthController
             session_start();
         }
         session_destroy();
-        echo json_encode(['message' => 'Logged out']);
+        echo json_encode(['ok' => true]);
     }
 
     public function check()
@@ -99,8 +99,8 @@ class AuthController
                 'authenticated' => true,
                 'user' => [
                     'id' => $_SESSION['user_id'],
-                    'role' => $_SESSION['role'],
-                    'name' => $_SESSION['user_name'] ?? ''
+                    'email' => $_SESSION['user_email'] ?? null,
+                    'name' => $_SESSION['user_name'] ?? null,
                 ]
             ]);
         } else {
