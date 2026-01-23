@@ -38,11 +38,11 @@ class AuthController
             return;
         }
 
-        $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
         if ($this->userRepository->create($email, $passwordHash, $name)) {
-            http_response_code(201);
-            echo json_encode(['message' => 'User created successfully']);
+            http_response_code(200);
+            echo json_encode(['ok' => true]);
         } else {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to create user']);
