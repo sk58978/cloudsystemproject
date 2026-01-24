@@ -1,0 +1,190 @@
+<?php
+
+declare(strict_types=1);
+
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
+
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') { http_response_code(204); exit; }
+
+function jsonResponse($data, int $code = 200): void {
+    http_response_code($code);
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+function db(): PDO {
+    static $pdo = null;
+    if ($pdo instanceof PDO) return $pdo;
+
+    // === UZUPEŁNIJ TO ===
+    $host = 'localhost';
+    $db   = 'marketplace';
+    $user = 'marketplace_user';   // <- zmień na swojego usera
+    $pass = 'zaq12wsx';        // <- zmień na swoje hasło
+    // ====================
+
+    $dsn = "mysql:host={$host};dbname={$db};charset=utf8mb4";
+    $opt = [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ];
+
+    $pdo = new PDO($dsn, $user, $pass, $opt);
+    return $pdo;
+}
+
+$route  = $_GET['route'] ?? '/';
+$route  = '/' . ltrim($route, '/');
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+if ($method === 'GET' && $route === '/api/health') {
+    jsonResponse(['ok' => true, 'time' => date('c')]);
+}
+
+if ($method === 'GET' && $route === '/api/user') {
+    jsonResponse(['authenticated' => false]);
+}
+
+/**
+ * GET /api/categories
+ */
+if ($method === 'GET' && $route === '/api/categories') {
+    try {
+        $pdo = db();
+        $rows = $pdo->query("SELECT id, name, slug FROM categories ORDER BY name")->fetchAll();
+        jsonResponse($rows);
+    } catch (Throwable $e) {
+        jsonResponse(['error' => 'DB error', 'detail' => $e->getMessage()], 500);
+    }
+}
+
+/**
+ * GET /api/products
+ * opcje:
+ *  - ?q=tekst
+ *  - ?category_id=3
+ */
+if ($method === 'GET' && $route === '/api/products') {
+    try {
+        $pdo = db();
+
+        $q = trim((string)($_GET['q'] ?? ''));
+        $categoryId = (int)($_GET['category_id'] ?? 0);
+
+        $sql = "SELECT id, category_id, name, description, price, image_url, created_at
+                FROM products
+                WHERE 1=1";
+        $params = [];
+
+        if ($categoryId > 0) {
+            $sql .= " AND category_id = :cat";
+            $params[':cat'] = $categoryId;
+        }
+
+        if ($q !== '') {
+            $sql .= " AND (name LIKE :q OR description LIKE :q)";
+            $params[':q'] = '%' . $q . '%';
+        }
+
+        $sql .= " ORDER BY id DESC LIMIT 200";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        jsonResponse($stmt->fetchAll());
+    } catch (Throwable $e) {
+        jsonResponse(['error' => 'DB error', 'detail' => $e->getMessage()], 500);
+    }
+}
+
+/**
+ * GET /api/products/{id}
+ */
+if ($method === 'GET' && preg_match('#^/api/products/(\d+)$#', $route, $m)) {
+    try {
+        $id = (int)$m[1];
+
+        $pdo = db();
+        $stmt = $pdo->prepare(
+            "SELECT id, category_id, name, description, price, image_url, created_at
+             FROM products
+             WHERE id = :id
+             LIMIT 1"
+        );
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+
+        if (!$row) {
+            jsonResponse(['error' => 'Not Found', 'path' => $route], 404);
+        }
+
+        jsonResponse($row);
+    } catch (Throwable $e) {
+        jsonResponse(['error' => 'DB error', 'detail' => $e->getMessage()], 500);
+    }
+}
+if ($method === 'POST' && $route === '/api/register') {
+    try {
+        $pdo = db();
+        $raw = file_get_contents('php://input') ?: '';
+        $in = json_decode($raw, true);
+        if (!is_array($in)) jsonResponse(['error' => 'Bad JSON'], 400);
+
+        $email = trim((string)($in['email'] ?? ''));
+        $pass  = (string)($in['password'] ?? '');
+        $name  = trim((string)($in['name'] ?? ''));
+
+        if ($email === '' || $pass === '') jsonResponse(['error' => 'Email and password required'], 400);
+
+        // dopasuj nazwę kolumn pod swoją tabelę users:
+        // poniżej zakładam: users(id, email, password_hash, name, created_at)
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :e LIMIT 1");
+        $stmt->execute([':e' => $email]);
+        if ($stmt->fetch()) jsonResponse(['error' => 'Email already exists'], 409);
+
+        $hash = password_hash($pass, PASSWORD_DEFAULT);
+
+        $stmt = $pdo->prepare("INSERT INTO users(email, password_hash, name) VALUES(:e,:p,:n)");
+        $stmt->execute([':e' => $email, ':p' => $hash, ':n' => $name]);
+
+        jsonResponse(['ok' => true]);
+    } catch (Throwable $e) {
+        jsonResponse(['error' => 'DB error', 'detail' => $e->getMessage()], 500);
+    }
+}
+if ($method === 'POST' && $route === '/api/login') {
+    try {
+        $pdo = db();
+        $raw = file_get_contents('php://input') ?: '';
+        $in = json_decode($raw, true);
+        if (!is_array($in)) jsonResponse(['error' => 'Bad JSON'], 400);
+
+        $email = trim((string)($in['email'] ?? ''));
+        $pass  = (string)($in['password'] ?? '');
+        if ($email === '' || $pass === '') jsonResponse(['error' => 'Email and password required'], 400);
+
+        $stmt = $pdo->prepare("SELECT id, email, password_hash, name FROM users WHERE email = :e LIMIT 1");
+        $stmt->execute([':e' => $email]);
+        $u = $stmt->fetch();
+
+        if (!$u || !password_verify($pass, (string)$u['password_hash'])) {
+            jsonResponse(['error' => 'Invalid credentials'], 401);
+        }
+
+        jsonResponse(['ok' => true, 'user' => ['id' => $u['id'], 'email' => $u['email'], 'name' => $u['name']]]);
+    } catch (Throwable $e) {
+        jsonResponse(['error' => 'DB error', 'detail' => $e->getMessage()], 500);
+    }
+}
+
+
+jsonResponse(['error' => 'Not Found', 'path' => $route], 404);

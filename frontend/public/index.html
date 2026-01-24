@@ -14,11 +14,12 @@
         <nav class="nav">
             <a href="index.html">Sklep</a>
             <a href="category.html">Kategorie</a>
-            <a href="cart.html">Koszyk</a>
+            <a href="contact.html">Kontakt</a>
         </nav>
         <div class="header-right">
             <input type="text" id="searchInput" placeholder="Szukaj produktów..." />
-            <a href="login.html" id="auth-link">Profil/Login</a>
+            <a href="cart.html" class="cart-link">Koszyk (<span id="cart-count">0</span>)</a>
+            <a href="login.html" id="auth-link">Profil</a>
         </div>
     </header>
 
@@ -38,10 +39,45 @@
     </main>
 
     <footer class="footer">
-        <p>© 2025 PolMarket</p>
+        <p>© 2025 PolMarket – projekt na uczelnię.</p>
     </footer>
 
-    <script type="module" src="../js/pages/home.js"></script>
+<!-- LOGIN MODAL -->
+<div id="loginModal" class="modal hidden" aria-hidden="true">
+  <div class="modal-backdrop" data-close="1"></div>
+
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <button class="modal-close" id="loginClose" aria-label="Zamknij">✕</button>
+
+    <h2 id="loginTitle">Zaloguj się</h2>
+    <p class="muted">Zaloguj się, aby przejść do koszyka i profilu.</p>
+
+    <div id="loginMsg" class="msg"></div>
+
+    <form id="loginModalForm">
+      <label>Email
+        <input type="email" name="email" required autocomplete="email">
+      </label>
+
+      <label>Hasło
+        <input type="password" name="password" required autocomplete="current-password">
+      </label>
+
+      <button class="btn-primary" type="submit">Zaloguj</button>
+
+      <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:13px;">
+        <a href="register.html">Załóż konto</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+    <script type="module" src="../js/pages/home.js?v=20260121"></script>
+    <script type="module" src="../js/common/header.js?v=20260121"></script>
+    <script type="module" src="../js/common/loginModal.js?v=20260121"></script>
+    <script type="module" src="/frontend/js/common/pageTransitions.js"></script>
+
 </body>
 
 </html>

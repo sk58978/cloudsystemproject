@@ -15,9 +15,7 @@ class ProductController
     public function getAll()
     {
         $categoryId = isset($_GET['category_id']) ? (int) $_GET['category_id'] : null;
-        $searchQuery = isset($_GET['q']) ? trim($_GET['q']) : null;
-
-        $products = $this->productRepository->getAll($categoryId, $searchQuery);
+        $products = $this->productRepository->getAll($categoryId);
         echo json_encode($products);
     }
 

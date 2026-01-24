@@ -1,0 +1,14 @@
+RewriteEngine On
+
+# jeśli plik/folder istnieje, to nie ruszaj (css/js/img)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# home
+RewriteRule ^$ index.html [L]
+
+# clean urls
+RewriteRule ^product/([0-9]+)$ product.html?id=$1 [L,QSA]
+RewriteRule ^cart$ cart.html [L]
+RewriteRule ^profile$ profile.html [L]
