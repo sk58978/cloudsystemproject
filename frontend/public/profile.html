@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>Twój Profil – PolMarket</title>
+    <title>PolMarket – Profil</title>
     <link rel="stylesheet" href="../assets/css/reset.css" />
     <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
@@ -14,61 +14,42 @@
         <nav class="nav">
             <a href="index.html">Sklep</a>
             <a href="category.html">Kategorie</a>
+            <a href="cart.html">Koszyk</a>
         </nav>
         <div class="header-right">
-            <a href="cart.html" class="cart-link">Koszyk (<span id="cart-count">0</span>)</a>
             <a href="login.html" id="auth-link">Profil</a>
         </div>
     </header>
 
-    <main class="auth-container" style="max-width: 600px;">
-        <h1>Twój Profil</h1>
-        <div id="profile-content">
-            <p>Ładowanie danych...</p>
+    <main>
+        <div class="auth-container">
+            <h2>Mój profil</h2>
+
+            <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
+                <div id="profile-avatar" class="avatar"
+                    style="width:44px; height:44px; font-size:18px; outline: 1px solid #ccc; display:flex; align-items:center; justify-content:center; border-radius:50%;">
+                    ?</div>
+                <div>
+                    <div id="profile-name" style="font-weight:800;">—</div>
+                    <div id="profile-email" style="color:#666; font-size:13px;">—</div>
+                </div>
+            </div>
+
+            <hr style="margin:18px 0; border:none; border-top:1px solid #eee;">
+
+            <button id="btn-logout" class="btn-primary" style="width:100%;">
+                Wyloguj
+            </button>
+
+            <div id="profile-msg" style="margin-top:12px; font-size:13px;"></div>
         </div>
-        <button id="logoutBtn" class="btn-primary" style="margin-top: 20px; background: #666;">Wyloguj się</button>
     </main>
 
     <footer class="footer">
         <p>© 2025 PolMarket</p>
     </footer>
 
-    <script type="module">
-        import apiClient from '../js/api/apiClient.js';
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            const content = document.getElementById('profile-content');
-
-            try {
-                const authData = await apiClient.get('/user');
-
-                if (authData.authenticated) {
-                    const user = authData.user;
-                    content.innerHTML = `
-                    <p><strong>Imię:</strong> ${user.name}</p>
-                    <p><strong>Email:</strong> ${user.email}</p>
-                    <p><strong>Rola:</strong> ${user.role}</p>
-                    <hr style="margin: 16px 0; border: 0; border-top: 1px solid #eee;">
-                    <p>Witaj w panelu użytkownika.</p>
-                `;
-                } else {
-                    window.location.href = 'login.html';
-                }
-            } catch (error) {
-                console.error(error);
-                window.location.href = 'login.html';
-            }
-
-            document.getElementById('logoutBtn').addEventListener('click', async () => {
-                try {
-                    await apiClient.post('/logout');
-                    window.location.href = 'index.html';
-                } catch (e) {
-                    console.error(e);
-                }
-            });
-        });
-    </script>
+    <script type="module" src="../js/pages/profilePage.js"></script>
 </body>
 
 </html>
