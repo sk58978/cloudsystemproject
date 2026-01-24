@@ -26,5 +26,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Login (placeholder for next task, or can implement partial logic now)
+    // Login
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(loginForm);
+            const data = Object.fromEntries(formData.entries());
+            const messageDiv = document.getElementById('auth-message');
+            messageDiv.textContent = '';
+
+            try {
+                const result = await apiClient.post('/api/login', data);
+                messageDiv.style.color = 'green';
+                messageDiv.textContent = 'Zalogowano pomyślnie! Przekierowywanie...';
+
+                // Store user info if needed, but session is key
+                // localStorage.setItem('user_name', result.user.name);
+
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            } catch (error) {
+                messageDiv.style.color = 'red';
+                messageDiv.textContent = error.message;
+            }
+        });
+    }
 });
