@@ -7,14 +7,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Auth check
     try {
-        const authData = await apiClient.get('/user');
+        const authData = await apiClient.get('/api/user');
         const authLink = document.getElementById('auth-link');
-        if (authData.authenticated) {
+        if (authLink && authData.authenticated) {
             authLink.textContent = authData.user.name;
             authLink.href = 'profile.html';
-        } else {
-            authLink.textContent = 'Zaloguj się';
-            authLink.href = 'login.html';
         }
     } catch (e) { }
 
@@ -24,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        const product = await apiClient.get(`/products/${productId}`);
+        const product = await apiClient.get(`/api/products/${productId}`);
 
         container.innerHTML = `
             <div style="display: flex; gap: 40px; flex-wrap: wrap;">
@@ -43,23 +40,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `;
 
-        // Logic for Add to Cart
         document.getElementById('addToCartBtn').addEventListener('click', async () => {
             const msg = document.getElementById('msg');
+            msg.textContent = '';
+
+            // Check auth first
+            let authData = null;
             try {
-                // Call API (will work once Task 18 is done)
-                await apiClient.post('/cart/add', { product_id: product.id, quantity: 1 });
+                authData = await apiClient.get('/api/user');
+            } catch { }
+
+            if (!authData?.authenticated) {
+                // Redirect to login if not authenticated
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Add to cart
+            try {
+                // Note: Logic aligned with backend CartController::add which accepts 'product_id' and 'qty' (mapped to quantity)
+                await apiClient.post('/api/cart/add', { product_id: product.id, qty: 1 });
                 msg.style.color = 'green';
                 msg.textContent = 'Dodano do koszyka!';
-                // refresh cart count logic could go here later
             } catch (error) {
                 console.error(error);
                 msg.style.color = 'red';
-                if (error.message.includes('401')) {
-                    msg.innerHTML = 'Musisz się <a href="login.html">zalogować</a>.';
-                } else {
-                    msg.textContent = 'Błąd dodawania do koszyka (API not ready?)';
-                }
+                msg.textContent = error?.message || 'Błąd dodawania do koszyka';
             }
         });
 
