@@ -59,6 +59,9 @@ if ($requestMethod === 'POST' && strpos($requestUri, '/api/register') !== false)
 } elseif ($requestMethod === 'POST' && strpos($requestUri, '/api/cart/remove') !== false) {
     $controller = new \App\Controllers\CartController();
     $controller->remove();
+} elseif ($requestMethod === 'POST' && strpos($requestUri, '/api/cart/update') !== false) {
+    $controller = new \App\Controllers\CartController();
+    $controller->update();
 } else {
     jsonResponse(['error' => 'Not Found'], 404);
 }
