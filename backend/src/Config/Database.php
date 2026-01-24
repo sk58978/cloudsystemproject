@@ -8,20 +8,17 @@ class Database
 {
     private static ?PDO $instance = null;
 
-    private function __construct()
-    {
-    }
-    private function __clone()
-    {
-    }
+    private function __construct() {}
+    private function __clone() {}
 
     public static function getConnection(): PDO
     {
         if (self::$instance === null) {
             $host = 'localhost';
             $db_name = 'marketplace';
-            $username = 'marketplace_user';
-            $password = 'zaq12wsx';
+            $username = 'root';
+            // Domyślne hasło w XAMPP to pusty ciąg znaków
+            $password = 'Nowe!Haslo12';
 
             try {
                 self::$instance = new PDO(

@@ -1,70 +1,48 @@
 <?php
+declare(strict_types=1);
 
-$requestUri = $_SERVER['REQUEST_URI'];
-$requestMethod = $_SERVER['REQUEST_METHOD'];
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: Content-Type");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 
-// Usuń query string z URI
-$requestUri = strtok($requestUri, '?');
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') { http_response_code(204); exit; }
 
-// Usuń prefiks katalogu (jeśli aplikacja nie jest w roocie serwera)
-// W XAMPP często to np. /projekt-marketplace/tworzenie/backend/public
-// Dla uproszczenia w tym środowisku założymy, że pracujemy na względnych ścieżkach od 'api'
-// lub po prostu parsujemy końcówkę.
-
-// Prosty router oparty na matchowaniu stringów
-// Przyjmujemy konwencję, że zapytania idą na /api/...
-
-// Helper do wysyłania odpowiedzi JSON
-if (!function_exists('jsonResponse')) {
-    function jsonResponse($data, $code = 200)
-    {
-        http_response_code($code);
-        echo json_encode($data);
-        exit;
-    }
+function jsonResponse($data, int $code = 200): void {
+    http_response_code($code);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
-// Router
-if ($requestMethod === 'POST' && strpos($requestUri, '/api/register') !== false) {
-    $controller = new \App\Controllers\AuthController();
-    $controller->register();
-} elseif ($requestMethod === 'POST' && strpos($requestUri, '/api/login') !== false) {
-    $controller = new \App\Controllers\AuthController();
-    $controller->login();
-} elseif ($requestMethod === 'POST' && strpos($requestUri, '/api/logout') !== false) {
-    $controller = new \App\Controllers\AuthController();
-    $controller->logout();
-} elseif ($requestMethod === 'GET' && strpos($requestUri, '/api/user') !== false) {
-    $controller = new \App\Controllers\AuthController();
-    $controller->check();
-} elseif ($requestMethod === 'GET' && strpos($requestUri, '/api/categories') !== false) {
-    $controller = new \App\Controllers\CategoryController();
-    $controller->getAll();
-} elseif ($requestMethod === 'GET' && strpos($requestUri, '/api/products') !== false) {
-    // Sprawdź czy to ID czy lista
-    // Proste sprawdzenie czy URI kończy się liczbą
-    if (preg_match('/\/api\/products\/(\d+)$/', $requestUri, $matches)) {
-        $controller = new \App\Controllers\ProductController();
-        $controller->getById($matches[1]);
-    } else {
-        $controller = new \App\Controllers\ProductController();
-        $controller->getAll();
-    }
-} elseif ($requestMethod === 'GET' && strpos($requestUri, '/api/cart') !== false) {
-    $controller = new \App\Controllers\CartController();
-    $controller->get();
-} elseif ($requestMethod === 'POST' && strpos($requestUri, '/api/cart/add') !== false) {
-    $controller = new \App\Controllers\CartController();
-    $controller->add();
-} elseif ($requestMethod === 'POST' && strpos($requestUri, '/api/cart/remove') !== false) {
-    $controller = new \App\Controllers\CartController();
-    $controller->remove();
-} elseif ($requestMethod === 'POST' && strpos($requestUri, '/api/cart/update') !== false) {
-    $controller = new \App\Controllers\CartController();
-    $controller->update();
-} elseif ($requestMethod === 'POST' && strpos($requestUri, '/api/contact') !== false) {
-    $controller = new \App\Controllers\ContactController();
-    $controller->send();
-} else {
-    jsonResponse(['error' => 'Not Found'], 404);
+$requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+// ✅ ROUTE bierzemy ZAWSZE z query string, niezależnie od scope
+$route = $_GET['route'] ?? '/';
+$route = '/' . ltrim($route, '/');
+$requestUri = strtok($route, '?'); // na wszelki wypadek
+
+// ---------- HEALTH ----------
+if ($requestMethod === 'GET' && $requestUri === '/api/health') {
+    jsonResponse(['ok' => true, 'time' => date('c')]);
 }
+
+// ---------- STUBY ----------
+if ($requestMethod === 'GET' && $requestUri === '/api/user') {
+    jsonResponse(['authenticated' => false]);
+}
+if ($requestMethod === 'GET' && $requestUri === '/api/categories') {
+    jsonResponse([
+        ['id' => 1, 'name' => 'Elektronika'],
+        ['id' => 2, 'name' => 'Dom i ogród'],
+        ['id' => 3, 'name' => 'Sport'],
+    ]);
+}
+if ($requestMethod === 'GET' && $requestUri === '/api/products') {
+    jsonResponse([
+        ['id' => 1, 'name' => 'Laptop 14"', 'price' => 2999.99, 'category_id' => 1, 'image_url' => null],
+        ['id' => 2, 'name' => 'Słuchawki', 'price' => 199.90, 'category_id' => 1, 'image_url' => null],
+        ['id' => 3, 'name' => 'Hantle 2x5kg', 'price' => 149.00, 'category_id' => 3, 'image_url' => null],
+    ]);
+}
+
+jsonResponse(['error' => 'Not Found', 'path' => $requestUri], 404);

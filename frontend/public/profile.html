@@ -1,55 +1,58 @@
 <!DOCTYPE html>
 <html lang="pl">
-
 <head>
-    <meta charset="UTF-8" />
-    <title>PolMarket – Profil</title>
-    <link rel="stylesheet" href="../assets/css/reset.css" />
-    <link rel="stylesheet" href="../assets/css/style.css" />
+  <meta charset="UTF-8" />
+  <title>PolMarket – Profil</title>
+  <link rel="stylesheet" href="../assets/css/reset.css" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
-
 <body>
-    <header class="header">
-        <div class="logo"><a href="index.html">Po<span>l</span>MARKET</a></div>
-        <nav class="nav">
-            <a href="index.html">Sklep</a>
-            <a href="category.html">Kategorie</a>
-            <a href="cart.html">Koszyk</a>
-        </nav>
-        <div class="header-right">
-            <a href="login.html" id="auth-link">Profil</a>
+  <header class="header">
+    <div class="logo">Po<span>l</span>MARKET</div>
+
+    <nav class="nav">
+      <a href="index.html">Sklep</a>
+      <a href="category.html">Kategorie</a>
+      <a href="contact.html">Kontakt</a>
+    </nav>
+
+    <div class="header-right">
+      <input type="text" id="searchInput" placeholder="Szukaj produktów..." />
+      <a href="cart.html" class="cart-link">Koszyk (<span id="cart-count">0</span>)</a>
+      <a href="login.html" id="auth-link">Zaloguj</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="auth-container">
+      <h2>Mój profil</h2>
+
+      <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
+        <div id="profile-avatar" class="avatar" style="width:44px; height:44px; font-size:18px;">?</div>
+        <div>
+          <div id="profile-name" style="font-weight:800;">—</div>
+          <div id="profile-email" style="color:#666; font-size:13px;">—</div>
         </div>
-    </header>
+      </div>
 
-    <main>
-        <div class="auth-container">
-            <h2>Mój profil</h2>
+      <hr style="margin:18px 0; border:none; border-top:1px solid #eee;">
 
-            <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
-                <div id="profile-avatar" class="avatar"
-                    style="width:44px; height:44px; font-size:18px; outline: 1px solid #ccc; display:flex; align-items:center; justify-content:center; border-radius:50%;">
-                    ?</div>
-                <div>
-                    <div id="profile-name" style="font-weight:800;">—</div>
-                    <div id="profile-email" style="color:#666; font-size:13px;">—</div>
-                </div>
-            </div>
+      <button id="btn-logout" class="btn-primary" style="width:100%;">
+        Wyloguj
+      </button>
 
-            <hr style="margin:18px 0; border:none; border-top:1px solid #eee;">
+      <div id="profile-msg" style="margin-top:12px; font-size:13px;"></div>
+    </div>
+  </main>
 
-            <button id="btn-logout" class="btn-primary" style="width:100%;">
-                Wyloguj
-            </button>
+  <footer class="footer">
+    <p>© 2025 PolMarket – projekt na uczelnię.</p>
+  </footer>
 
-            <div id="profile-msg" style="margin-top:12px; font-size:13px;"></div>
-        </div>
-    </main>
+  <script type="module" src="../js/pages/profilePage.js?v=20260121"></script>
+  <script type="module" src="../js/common/header.js?v=20260121"></script>
+  <script type="module" src="../js/common/loginModal.js?v=20260121"></script>
+  <script type="module" src="/frontend/js/common/pageTransitions.js"></script>
 
-    <footer class="footer">
-        <p>© 2025 PolMarket</p>
-    </footer>
-
-    <script type="module" src="../js/pages/profilePage.js"></script>
 </body>
-
 </html>

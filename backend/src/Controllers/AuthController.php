@@ -38,11 +38,11 @@ class AuthController
             return;
         }
 
-        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+        $passwordHash = password_hash($password, PASSWORD_BCRYPT);
 
         if ($this->userRepository->create($email, $passwordHash, $name)) {
-            http_response_code(200);
-            echo json_encode(['ok' => true]);
+            http_response_code(201);
+            echo json_encode(['message' => 'User created successfully']);
         } else {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to create user']);
@@ -62,15 +62,16 @@ class AuthController
                 session_start();
             }
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_email'] = $user['email'];
+            $_SESSION['role'] = $user['role'];
             $_SESSION['user_name'] = $user['name'];
 
             echo json_encode([
-                'ok' => true,
+                'message' => 'Logged in successfully',
                 'user' => [
                     'id' => $user['id'],
+                    'name' => $user['name'],
                     'email' => $user['email'],
-                    'name' => $user['name']
+                    'role' => $user['role']
                 ]
             ]);
         } else {
@@ -85,7 +86,7 @@ class AuthController
             session_start();
         }
         session_destroy();
-        echo json_encode(['ok' => true]);
+        echo json_encode(['message' => 'Logged out']);
     }
 
     public function check()
@@ -99,8 +100,8 @@ class AuthController
                 'authenticated' => true,
                 'user' => [
                     'id' => $_SESSION['user_id'],
-                    'email' => $_SESSION['user_email'] ?? null,
-                    'name' => $_SESSION['user_name'] ?? null,
+                    'role' => $_SESSION['role'],
+                    'name' => $_SESSION['user_name'] ?? ''
                 ]
             ]);
         } else {
