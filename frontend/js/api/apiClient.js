@@ -1,52 +1,63 @@
-class ApiClient {
-    constructor(baseUrl) {
-        this.baseUrl = baseUrl;
+export class ApiClient {
+    constructor(base) {
+        this.base = base;
     }
 
-    async request(endpoint, method = 'GET', data = null) {
-        const url = `${this.baseUrl}${endpoint}`;
-        const options = {
-            method,
+    async request(path, options = {}) {
+        const ts = Date.now();
+        const [p, qs] = String(path).split("?", 2);
+
+        const baseUrl = this.base.endsWith('/') ? this.base.slice(0, -1) : this.base;
+        const pathWithSlash = p.startsWith('/') ? p : '/' + p;
+
+        let url = `${baseUrl}${pathWithSlash}`;
+        const symbol = url.includes('?') ? '&' : '?';
+        url += `${symbol}_ts=${ts}`;
+
+        if (qs) {
+            url += `&${qs}`;
+        }
+
+        const res = await fetch(url, {
+            credentials: "include",
+            cache: "no-store",
+            ...options,
             headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                "Accept": "application/json",
+                ...(options.headers || {}),
             },
-        };
+        });
 
-        if (data) {
-            options.body = JSON.stringify(data);
-        }
+        const text = await res.text();
 
-        try {
-            const response = await fetch(url, options);
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || `Request failed with status ${response.status}`);
+        let data = null;
+        if (text && text.trim() !== "") {
+            try {
+                data = JSON.parse(text);
+            } catch {
+                throw new Error(`API is not JSON (HTTP ${res.status}). RAW: ${text.slice(0, 160)}`);
             }
-
-            return result;
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
         }
+
+        if (!res.ok) {
+            throw new Error((data && data.error) ? data.error : `HTTP ${res.status}`);
+        }
+
+        return data;
     }
 
-    get(endpoint) {
-        return this.request(endpoint, 'GET');
+    get(path) {
+        return this.request(path);
     }
 
-    post(endpoint, data) {
-        return this.request(endpoint, 'POST', data);
-    }
-
-    delete(endpoint, data = null) {
-        return this.request(endpoint, 'DELETE', data);
+    post(path, bodyObj) {
+        return this.request(path, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(bodyObj),
+        });
     }
 }
 
-// Adjust this base URL if your server configuration differs
-// Assuming XAMPP structure: localhost/projekt-marketplace/tworzenie/backend/public/index.php/api...
-const apiClient = new ApiClient('/projekt-marketplace/tworzenie/backend/public/index.php/api');
-
+const apiClient = new ApiClient('/projekt-marketplace/tworzenie/backend/public/index.php');
 export default apiClient;
